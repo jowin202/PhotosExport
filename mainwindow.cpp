@@ -38,6 +38,12 @@ void MainWindow::on_button_output_clicked()
 void MainWindow::on_text_output_textChanged(const QString &arg1)
 {
     this->settings.setValue("output_text", arg1);
+    if (QDir(arg1).exists())
+    {
+        target_dir.setPath(arg1);
+        target_dir.setSorting(QDir::Name | QDir::IgnoreCase);
+    }
+
 }
 
 
@@ -51,33 +57,32 @@ void MainWindow::scan(QString path)
 {
     if (QDir(path).exists())
     {
-        QDir verzeichnis(path);
-        verzeichnis.setSorting(QDir::Name | QDir::IgnoreCase);
-        dateien = verzeichnis.entryList(QDir::Files, QDir::Name | QDir::IgnoreCase);
-
-
-        this->current = verzeichnis.absoluteFilePath(dateien.first());
-        QImage img(this->current);
-        if (img.width() > this->ui->spin_max_width->value())
-        {
-            img = img.scaledToWidth(this->ui->spin_max_width->value());
-        }
-
-
-
-        this->ui->pic_view->setPixmap(QPixmap::fromImage(img));
-
-        /*
-        for (const QString& datei : dateien) {
-            QString pfad = verzeichnis.absoluteFilePath(datei);
-            if (pfad.toLower().endsWith(".png"))
-            {
-                qDebug() << pfad;
-            }
-        }
-        */
-
+        dir.setPath(path);
+        dir.setSorting(QDir::Name | QDir::IgnoreCase);
+        files = dir.entryList(QDir::Files, QDir::Name | QDir::IgnoreCase);
+        this->next();
     }
+}
+
+void MainWindow::next()
+{
+    while (!files.first().toLower().endsWith(".jpg") && !files.first().toLower().endsWith(".png"))
+    {
+        this->files.removeFirst();
+    }
+
+
+    this->ui->text_filename->setText(files.first());
+    this->current = dir.absoluteFilePath(files.first());
+    QImage img(this->current);
+    if (img.width() > this->ui->spin_max_width->value())
+    {
+        img = img.scaledToWidth(this->ui->spin_max_width->value());
+    }
+
+
+
+    this->ui->pic_view->setPixmap(QPixmap::fromImage(img));
 }
 
 void MainWindow::openPreview(const QString path)
@@ -93,13 +98,18 @@ void MainWindow::openPreview(const QString path)
 
 void MainWindow::on_button_yes_clicked()
 {
-
+    QFile::copy(this->current,target_dir.absoluteFilePath(files.first()));
+    this->on_button_no_clicked();
 }
 
 
 void MainWindow::on_button_no_clicked()
 {
+    if (this->files.isEmpty())
+        return;
 
+    this->files.removeFirst();
+    this->next();
 }
 
 

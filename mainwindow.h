@@ -34,6 +34,7 @@ private slots:
     void on_button_no_clicked();
 
     void scan(QString path);
+    void next();
     void openPreview(const QString path);
 
 
@@ -41,7 +42,9 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QStringList dateien;
+    QDir dir;
+    QDir target_dir;
+    QStringList files;
     QString current;
     QSettings settings;
 };
